@@ -38,7 +38,7 @@
     {
       "parameters": {
         "promptType": "define",
-        "text": "={{ $json.prompt }} Candidate profile:\nApplied AI Engineer candidate with experience in IT support, computer/network troubleshooting, workflow automation, RAG, security testing, and penetration testing. Currently pursuing a Master’s in Software Engineering at Nile University of Nigeria, with a Bachelor’s degree in Mathematical Science from the Federal University of Technology, Akure. Has hands-on experience configuring staff computers, supporting network devices and printers, managing IT documentation, and coordinating repair of faulty equipment.",
+        "text": "={{ $json.prompt }}",
         "batching": {}
       },
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
@@ -91,7 +91,7 @@
           "values": [
             {
               "name": "prompt",
-              "stringValue": "=Generate a VERY short cover letter to apply for this job.\n\nInput:\nJob Title: {{ $json.title }}\nDescription/Requirements: {{ $json.description }}\n\nStrict Requirements:\n- 2-3 sentences, no more\n- No greetings or signatures\n- No phrases like \"with great interest,\" \"confident,\" \"glad to,\" or \"contribute\"\n- The text should look like it was written by a human, not HR or a neural network\n- Clearly state that you have relevant experience for the job {{ $json.title }}\n- Professional, but conversational\n- Only the final text of the letter\n- No comments, explanations, or advice\n- English language\n- Return only the final cover letter text.\n- Do not include JSON, tool calls, XML-like tags, metadata, headings, explanations, or extra content.\n"
+              "stringValue": "=Write a concise, professional cover letter tailored to this role. Use only candidate details supplied by the workflow at runtime and the job title and description. Do not invent qualifications, employers, degrees, or experience. Return only the letter text."
             }
           ]
         },
