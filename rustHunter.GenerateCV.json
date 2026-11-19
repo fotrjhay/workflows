@@ -1,0 +1,592 @@
+{
+  "name": "rustHunter.GenerateCV",
+  "nodes": [
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "f4574184-3f7d-403e-8808-1650153666eb",
+              "leftValue": "={{ $json.description }}",
+              "rightValue": "ready",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [
+        192,
+        0
+      ],
+      "id": "6e0817ac-4cd5-4181-91b7-dd95e9777017",
+      "name": "Filter"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.prompt }} Candidate profile:\nApplied AI Engineer candidate with experience in IT support, computer/network troubleshooting, workflow automation, RAG, security testing, and penetration testing. Currently pursuing a Master’s in Software Engineering at Nile University of Nigeria, with a Bachelor’s degree in Mathematical Science from the Federal University of Technology, Akure. Has hands-on experience configuring staff computers, supporting network devices and printers, managing IT documentation, and coordinating repair of faulty equipment.",
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        768,
+        16
+      ],
+      "id": "6635e51d-b719-42e2-bc31-db4e919b3e7e",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "model": "Qwen3-4B-Function-Calling-Pro:latest",
+        "options": {
+          "format": "default"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "typeVersion": 1,
+      "position": [
+        768,
+        240
+      ],
+      "id": "da90d58e-2b70-4f51-b9b9-6904b324f3db",
+      "name": "Ollama Chat Model",
+      "credentials": {
+        "ollamaApi": {
+          "id": "REPLACE_WITH_N8N_CREDENTIAL_ID",
+          "name": "Ollama account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        384,
+        0
+      ],
+      "id": "4c466e1a-d8b4-451d-bbb8-cb1cac637376",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "fields": {
+          "values": [
+            {
+              "name": "prompt",
+              "stringValue": "=Generate a VERY short cover letter to apply for this job.\n\nInput:\nJob Title: {{ $json.title }}\nDescription/Requirements: {{ $json.description }}\n\nStrict Requirements:\n- 2-3 sentences, no more\n- No greetings or signatures\n- No phrases like \"with great interest,\" \"confident,\" \"glad to,\" or \"contribute\"\n- The text should look like it was written by a human, not HR or a neural network\n- Clearly state that you have relevant experience for the job {{ $json.title }}\n- Professional, but conversational\n- Only the final text of the letter\n- No comments, explanations, or advice\n- English language\n- Return only the final cover letter text.\n- Do not include JSON, tool calls, XML-like tags, metadata, headings, explanations, or extra content.\n"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "cf37cec0-f051-4250-9fff-7cd224c9c7f0",
+      "name": "Prepare AI Prompt",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [
+        608,
+        16
+      ]
+    },
+    {
+      "parameters": {
+        "fields": {
+          "values": [
+            {
+              "name": "row_number",
+              "type": "numberValue",
+              "numberValue": "={{ $('Prepare AI Prompt').item.json.row_number }}"
+            },
+            {
+              "name": "title",
+              "stringValue": "={{ $('Prepare AI Prompt').item.json.title }}"
+            },
+            {
+              "name": "url",
+              "stringValue": "={{ $('Prepare AI Prompt').item.json.url }}"
+            },
+            {
+              "stringValue": "={{ $('Prepare AI Prompt').item.json.employer }}"
+            },
+            {
+              "name": "description",
+              "stringValue": "={{ $('Prepare AI Prompt').item.json.description }}"
+            },
+            {
+              "name": "cover letter",
+              "stringValue": "={{ $json.text }}"
+            },
+            {
+              "name": "status",
+              "stringValue": "ready"
+            }
+          ]
+        },
+        "include": "except",
+        "excludeFields": "text",
+        "options": {}
+      },
+      "id": "1fc91442-3d8d-4e0e-bea7-83aca7f46e30",
+      "name": "Prepare Apply Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [
+        1056,
+        16
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/REPLACE_WITH_GOOGLE_SHEET_ID/edit?gid=0#gid=0",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/REPLACE_WITH_GOOGLE_SHEET_ID/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [
+            "row_number"
+          ],
+          "schema": [
+            {
+              "id": "title",
+              "displayName": "title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "url",
+              "displayName": "url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "employer",
+              "displayName": "employer",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "description",
+              "displayName": "description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "cover letter",
+              "displayName": "cover letter",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1216,
+        16
+      ],
+      "id": "34a253a9-405c-40ed-9b2c-92ee8c4abbe8",
+      "name": "Update row in sheet1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REPLACE_WITH_N8N_CREDENTIAL_ID",
+          "name": "Google Sheets account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fields": {
+          "values": [
+            {
+              "name": "search_query",
+              "stringValue": "Process Automation Engineer"
+            },
+            {
+              "name": "max_pages",
+              "stringValue": "2"
+            },
+            {
+              "name": "current_page",
+              "stringValue": "1"
+            },
+            {
+              "name": "include_description",
+              "type": "booleanValue"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "0cb21793-2c8c-4cd6-9687-b98ff2125172",
+      "name": "Initialize Settings",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [
+        -528,
+        16
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=http://127.0.0.1:3000/search?query={{ $json.search_query }}&page={{ $json.current_page }}",
+        "options": {}
+      },
+      "id": "28f0be72-0b10-42ff-91e7-47da7d190ddb",
+      "name": "Search Vacancies",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        -368,
+        16
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $input.all().length }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              },
+              "id": "1a64bd6e-48bf-4f39-a06f-c38cea0ab6c5"
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "6709197a-e076-4212-9722-2dd947b807a5",
+      "name": "Has Results?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -208,
+        16
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/REPLACE_WITH_GOOGLE_SHEET_ID/edit?gid=0#gid=0",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/REPLACE_WITH_GOOGLE_SHEET_ID/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {
+            "title": "={{ $json.title }}",
+            "url": "={{ $json.url }}",
+            "employer": "={{ $json.employer }}",
+            "description": "={{ $json.description }}"
+          },
+          "matchingColumns": [
+            "title"
+          ],
+          "schema": [
+            {
+              "id": "title",
+              "displayName": "title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "url",
+              "displayName": "url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "employer",
+              "displayName": "employer",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "description",
+              "displayName": "description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {
+          "handlingExtraData": "insertInNewColumn"
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        0,
+        0
+      ],
+      "id": "9019a8cc-52c8-46ed-9c85-00fa27b98212",
+      "name": "Append or update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REPLACE_WITH_N8N_CREDENTIAL_ID",
+          "name": "Google Sheets account 4"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -688,
+        16
+      ],
+      "id": "09946fbd-0e99-4d73-8a59-f2c7006ea414",
+      "name": "When clicking ‘Execute workflow’"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Filter": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ollama Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Prepare Apply Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Prepare AI Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare AI Prompt": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Apply Data": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update row in sheet1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Initialize Settings": {
+      "main": [
+        [
+          {
+            "node": "Search Vacancies",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search Vacancies": {
+      "main": [
+        [
+          {
+            "node": "Has Results?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Results?": {
+      "main": [
+        [
+          {
+            "node": "Append or update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append or update row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Initialize Settings",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "meta": {
+    "instanceId": "REPLACE_WITH_N8N_INSTANCE_ID"
+  },
+  "tags": []
+}
